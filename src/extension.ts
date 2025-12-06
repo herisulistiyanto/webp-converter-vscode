@@ -55,6 +55,19 @@ export function activate(context: vscode.ExtensionContext) {
         allFileInfo
       );
 
+      // Cleanup function to free base64 image data from setup dialog
+      function cleanupSetupData() {
+        for (const info of allFileInfo) {
+          info.base64Image = "";
+        }
+        allFileInfo.length = 0;
+      }
+
+      // Cleanup when setup panel is disposed (X button or programmatic)
+      setupPanel.onDidDispose(() => {
+        cleanupSetupData();
+      });
+
       // Handle messages from the setup dialog
       setupPanel.webview.onDidReceiveMessage(
         async (message) => {
@@ -169,6 +182,23 @@ async function showBatchPreviewWindow(
     }
   );
 
+  // Cleanup function to free memory
+  function cleanupCache() {
+    for (const item of batchData) {
+      // Clear cached WebP data (base64 strings can be large)
+      item.cachedWebP = undefined;
+      // Clear base64 image data
+      item.fileInfo.base64Image = "";
+    }
+    // Clear the array
+    batchData.length = 0;
+  }
+
+  // Ensure cleanup when panel is disposed (X button, or programmatic dispose)
+  panel.onDidDispose(() => {
+    cleanupCache();
+  });
+
   // Get or convert WebP data with caching
   async function getWebPData(index: number): Promise<WebPData> {
     const item = batchData[index];
@@ -275,7 +305,15 @@ async function showBatchPreviewWindow(
           break;
 
         case "finish":
-          panel.dispose();
+          // Copy data needed for conversion BEFORE disposing panel
+          const imagesToConvert = batchData.map((item) => ({
+            filePath: item.filePath,
+            quality: item.quality,
+            fileName: item.fileInfo.fileName,
+          }));
+          const totalImages = imagesToConvert.length;
+
+          panel.dispose(); // This triggers cleanupCache()
 
           // Convert all images with their individual quality settings
           await vscode.window.withProgress(
@@ -285,16 +323,14 @@ async function showBatchPreviewWindow(
               cancellable: false,
             },
             async (progress) => {
-              for (let i = 0; i < batchData.length; i++) {
+              for (let i = 0; i < totalImages; i++) {
                 progress.report({
-                  increment: 100 / batchData.length,
-                  message: `${i + 1}/${batchData.length} - Converting ${
-                    batchData[i].fileInfo.fileName
-                  }`,
+                  increment: 100 / totalImages,
+                  message: `${i + 1}/${totalImages} - Converting ${imagesToConvert[i].fileName}`,
                 });
                 await saveWebPFile(
-                  batchData[i].filePath,
-                  batchData[i].quality,
+                  imagesToConvert[i].filePath,
+                  imagesToConvert[i].quality,
                   deleteOriginal,
                   lossless
                 );
@@ -303,9 +339,7 @@ async function showBatchPreviewWindow(
           );
 
           vscode.window.showInformationMessage(
-            `Successfully converted ${batchData.length} image${
-              batchData.length > 1 ? "s" : ""
-            } to WebP!`
+            `Successfully converted ${totalImages} image${totalImages > 1 ? "s" : ""} to WebP!`
           );
           break;
 
