@@ -17,15 +17,15 @@ Convert your images to WebP format with a visual quality preview, inspired by An
 
 ### From VSIX Package
 
-1. Download `webp-converter-1.0.0.vsix`
-2. Install via command line: `code --install-extension webp-converter-1.0.0.vsix`
+1. Download `webp-converter-x.x.x.vsix`
+2. Install via command line: `code --install-extension webp-converter-x.x.x.vsix`
 3. Or install via VS Code: Extensions → ⋯ → Install from VSIX...
 
 ### From Source
 
 1. Clone or download this repository
 2. Run `npm install` to install dependencies
-3. Run `npm run package` to build the extension
+3. Run `npm run build:vsix` to build the extension
 4. The VSIX file will be created in the project directory
 
 ## Usage
@@ -96,11 +96,8 @@ The extension works out of the box with sensible defaults:
 # Install dependencies
 npm install
 
-# Build for production
-npm run package
-
-# Create VSIX package
-npx vsce package --no-dependencies --allow-missing-repository
+# Build VSIX from scratch (clean, typecheck, bundle, package)
+npm run build:vsix
 ```
 
 ## Development
@@ -122,19 +119,9 @@ npm run watch
 - Animated GIFs will be converted to static WebP (first frame)
 - WASM loading adds slight startup delay on first conversion
 
-## Changelog
-
-### v1.0.0
-
-- Initial release with universal VSIX support
-- WASM-based image processing (no native dependencies)
-- Batch conversion support
-- Preview mode with quality adjustment
-- Lossless compression option
-
 ## License
 
-MIT
+[MIT](https://github.com/herisulistiyanto/webp-converter-vscode/blob/main/LICENSE)
 
 ## Credits
 

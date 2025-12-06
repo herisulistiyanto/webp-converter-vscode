@@ -1,15 +1,36 @@
 {
+  "private": true,
   "name": "webp-converter",
   "displayName": "WebP Converter",
   "description": "Convert images to WebP format with quality preview",
-  "version": "1.0.0",
+  "version": "0.0.1",
+  "license": "MIT",
   "publisher": "kjokkenkoddinger",
   "engines": {
-    "vscode": "^1.75.0"
+    "vscode": "^1.76.0"
   },
   "categories": [
     "Other"
   ],
+  "keywords": [
+    "webp",
+    "convert",
+    "image",
+    "converter",
+    "png",
+    "jpg",
+    "jpeg",
+    "tiff",
+    "webp-convert",
+    "webp-converter",
+    "webp-wasm"
+  ],
+  "repository": {
+    "type": "git",
+    "url": "https://github.com/herisulistiyanto/webp-converter-vscode"
+  },
+  "homepage": "https://github.com/herisulistiyanto/webp-converter-vscode#readme",
+  "icon": "logo.png",
   "activationEvents": [],
   "main": "./out/extension.js",
   "contributes": {
@@ -35,6 +56,10 @@
     "watch": "tsc -watch -p ./",
     "package": "node esbuild.config.js --production",
     "package:dev": "node esbuild.config.js",
+    "clean": "node -e \"const fs=require('fs');const p=require('path');['out'].forEach(d=>{if(fs.existsSync(d))fs.rmSync(d,{recursive:true})});fs.readdirSync('.').filter(f=>f.endsWith('.vsix')).forEach(f=>fs.unlinkSync(f));console.log('Cleaned')\"",
+    "typecheck": "tsc --noEmit",
+    "prebuild:vsix": "npm run clean && npm run typecheck",
+    "build:vsix": "npm run package && npx vsce package --no-dependencies --allow-missing-repository",
     "pretest": "npm run compile && npm run lint",
     "lint": "eslint src --ext ts",
     "format": "prettier --write \"src/**/*.{ts,js,json}\"",
