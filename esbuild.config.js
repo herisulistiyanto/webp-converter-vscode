@@ -44,6 +44,44 @@ function copyWasmFiles() {
     }
   }
 }
+
+// Copy template files to output directory
+function copyTemplateFiles() {
+  const outDir = "out";
+
+  // Create dialog and webview directories in output
+  const dialogOutDir = path.join(outDir, "dialog");
+  const webviewOutDir = path.join(outDir, "webview");
+
+  if (!fs.existsSync(dialogOutDir)) {
+    fs.mkdirSync(dialogOutDir, { recursive: true });
+  }
+  if (!fs.existsSync(webviewOutDir)) {
+    fs.mkdirSync(webviewOutDir, { recursive: true });
+  }
+
+  // Copy dialog templates
+  const dialogFiles = ["setup.html", "setup.css", "setup.js"];
+  for (const file of dialogFiles) {
+    const srcPath = path.join("src", "dialog", file);
+    const destPath = path.join(dialogOutDir, file);
+    if (fs.existsSync(srcPath)) {
+      fs.copyFileSync(srcPath, destPath);
+      console.log(`Copied dialog/${file} to out/dialog/`);
+    }
+  }
+
+  // Copy webview templates
+  const webviewFiles = ["preview.html", "preview.css", "preview.js"];
+  for (const file of webviewFiles) {
+    const srcPath = path.join("src", "webview", file);
+    const destPath = path.join(webviewOutDir, file);
+    if (fs.existsSync(srcPath)) {
+      fs.copyFileSync(srcPath, destPath);
+      console.log(`Copied webview/${file} to out/webview/`);
+    }
+  }
+}
 async function main() {
   // Clean old compiled files
   cleanOutDir();
@@ -72,34 +110,33 @@ async function main() {
     keepNames: false,
   });
 
-  if (watch) {
-    await ctx.watch();
-    console.log("Watching...");
-  } else {
-    const result = await ctx.rebuild();
-    await ctx.dispose();
+  // Copy WASM and template files (needed for both watch and build modes)
+  copyWasmFiles();
+  copyTemplateFiles();
 
-    // Copy WASM files
-    copyWasmFiles();
+  if (watch) {
+    // Watch for template file changes
+    const templateDirs = ["src/dialog", "src/webview"];
+
+    templateDirs.forEach((dir) => {
+      fs.watch(dir, { recursive: true }, (_eventType, filename) => {
+        if (filename) {
+          console.log(`Template file changed: ${filename}`);
+          copyTemplateFiles();
+        }
+      });
+    });
+
+    await ctx.watch();
+    // This message is matched by the background problem matcher to signal build complete
+    console.log("Watching for changes...");
+  } else {
+    await ctx.rebuild();
+    await ctx.dispose();
 
     // Get file size
     const stats = fs.statSync("out/extension.js");
-    console.log(`\nBundle size: ${(stats.size / 1024).toFixed(2)} KB`);
-
-    if (result.metafile) {
-      // Log bundle analysis
-      console.log("\nBundle analysis (top 10 files):");
-      const inputs = Object.entries(result.metafile.inputs)
-        .map(([name, data]) => ({ name, size: data.bytes }))
-        .sort((a, b) => b.size - a.size)
-        .slice(0, 10);
-
-      for (const input of inputs) {
-        console.log(`  ${(input.size / 1024).toFixed(2).padStart(8)} KB  ${input.name}`);
-      }
-    }
-
-    console.log(`\nFinal output size: ${(stats.size / 1024).toFixed(2)} KB`);
+    console.log(`Bundle size: ${(stats.size / 1024).toFixed(2)} KB`);
   }
 }
 

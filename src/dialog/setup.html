@@ -1,0 +1,97 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>WebP Converter - Setup</title>
+    <style>{{CSS_CONTENT}}</style>
+</head>
+<body>
+    <div class="container">
+        <div class="header">
+            <h1>WebP Converter Setup</h1>
+            {{HEADER_INFO}}
+        </div>
+
+        <div class="form-group">
+            <label class="form-label">Encoding Type</label>
+            <div class="radio-group">
+                <label class="radio-container">
+                    <input type="radio" name="encoding-type" value="lossless">
+                    <span class="radio-label">Lossless encoding (no quality loss)</span>
+                </label>
+                <label class="radio-container">
+                    <input type="radio" name="encoding-type" value="lossy" checked>
+                    <span class="radio-label">Lossy encoding (with quality control)</span>
+                </label>
+            </div>
+        </div>
+
+        <div class="form-group" id="quality-section">
+            <label class="form-label">Lossy Encoding Settings</label>
+            <div class="quality-box">
+                <div class="quality-header">
+                    <span>Quality (%)</span>
+                </div>
+                <div class="quality-controls">
+                    <div class="slider-container">
+                        <input
+                            type="range"
+                            id="quality-slider"
+                            class="slider"
+                            min="1"
+                            max="100"
+                            value="75"
+                        >
+                    </div>
+                    <input
+                        type="number"
+                        id="quality-input"
+                        class="quality-input"
+                        min="1"
+                        max="100"
+                        value="75"
+                    >
+                </div>
+                <div class="preview-option">
+                    <label class="checkbox-container-inline">
+                        <input type="checkbox" id="show-preview" checked>
+                        <span class="checkbox-label">Show preview window before converting</span>
+                    </label>
+                </div>
+            </div>
+        </div>
+
+        <div class="size-preview">
+            <div class="size-row">
+                <span class="size-label">{{ORIGINAL_SIZE_LABEL}}</span>
+                <span class="size-value">{{ORIGINAL_SIZE}}</span>
+            </div>
+            <div class="size-row">
+                <span class="size-label">{{WEBP_SIZE_LABEL}}</span>
+                <span class="size-value" id="webp-size">Calculating...</span>
+            </div>
+            <div class="size-row">
+                <span class="size-label">{{REDUCTION_LABEL}}</span>
+                <span class="size-value highlight" id="reduction">-</span>
+            </div>
+        </div>
+
+        {{BATCH_SECTION}}
+
+        <div class="form-group">
+            <label class="checkbox-container">
+                <input type="checkbox" id="delete-original">
+                <span class="checkbox-label">Delete original files after conversion</span>
+            </label>
+        </div>
+
+        <div class="buttons">
+            <button id="cancel-btn">Cancel</button>
+            <button id="continue-btn" class="primary">Continue</button>
+        </div>
+    </div>
+
+    <script>{{JS_CONTENT}}</script>
+</body>
+</html>

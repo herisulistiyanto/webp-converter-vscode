@@ -1,0 +1,93 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>WebP Converter</title>
+    <style>
+      {{CSS_CONTENT}}
+    </style>
+  </head>
+  <body>
+    <div class="header">
+      <h1>Preview and Adjust Converted Images</h1>
+      <div class="file-path">{{FILE_NAME}}</div>
+      {{BATCH_INFO}}
+    </div>
+
+    <div class="preview-container">
+      <div class="preview-column">
+        <div class="column-header">{{ORIGINAL_FORMAT}}</div>
+        <div class="image-wrapper">
+          <img src="{{ORIGINAL_IMAGE}}" alt="Original" />
+        </div>
+        <div class="image-info">
+          <div>{{IMAGE_DIMENSIONS}}</div>
+        </div>
+      </div>
+
+      <div class="preview-column">
+        <div class="column-header">WEBP</div>
+        <div class="image-wrapper">
+          <img id="webp-preview" src="{{WEBP_IMAGE}}" alt="WebP" />
+        </div>
+        <div class="image-info">
+          <div>{{IMAGE_DIMENSIONS}}</div>
+        </div>
+      </div>
+    </div>
+
+    <div class="controls">
+      <div class="size-comparison">
+        <div class="size-comparison-row">
+          <span class="size-label">Original Size:</span>
+          <span class="size-value" id="original-size">-</span>
+        </div>
+        <div class="size-comparison-row">
+          <span class="size-label">WebP Size:</span>
+          <span class="size-value size-highlight" id="webp-size">-</span>
+        </div>
+        <div class="size-comparison-row">
+          <span class="size-label">Reduction:</span>
+          <span class="size-value size-highlight" id="reduction">-</span>
+        </div>
+      </div>
+
+      <div class="quality-control">
+        <div class="quality-label">
+          <span>Quality (Default 75%)</span>
+          <span id="quality-value">{{QUALITY}}%</span>
+        </div>
+        <input
+          type="range"
+          id="quality-slider"
+          class="slider"
+          min="1"
+          max="100"
+          value="{{QUALITY}}"
+        />
+      </div>
+      <div class="buttons">
+        {{BATCH_BUTTONS}}
+        <button id="cancel-btn">Cancel</button>
+        {{FINISH_BUTTON}}
+      </div>
+    </div>
+
+    <div class="zoom-modal" id="zoom-modal">
+      <span class="zoom-close" id="zoom-close">&times;</span>
+      <img id="zoom-image" src="" alt="Zoomed" />
+      <div class="zoom-label" id="zoom-label"></div>
+    </div>
+
+    <!-- Loading Overlay -->
+    <div class="loading-overlay" id="loading-overlay">
+      <div class="loading-spinner"></div>
+      <div class="loading-text" id="loading-text">Loading image...</div>
+      <div class="loading-progress" id="loading-progress"></div>
+    </div>
+
+    <!-- prettier-ignore -->
+    <script>{{JS_CONTENT}}</script>
+  </body>
+</html>

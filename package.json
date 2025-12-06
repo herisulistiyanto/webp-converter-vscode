@@ -3,7 +3,7 @@
   "name": "webp4vscode",
   "displayName": "WebP Converter for VSCode",
   "description": "Convert images to WebP format with quality preview",
-  "version": "0.0.1",
+  "version": "0.0.2",
   "license": "MIT",
   "publisher": "kjokkenkoddinger",
   "engines": {
@@ -52,8 +52,8 @@
   },
   "scripts": {
     "vscode:prepublish": "npm run package",
-    "compile": "tsc -p ./",
-    "watch": "tsc -watch -p ./",
+    "compile": "node esbuild.config.js",
+    "watch": "node esbuild.config.js --watch",
     "package": "node esbuild.config.js --production",
     "package:dev": "node esbuild.config.js",
     "clean": "node -e \"const fs=require('fs');const p=require('path');['out'].forEach(d=>{if(fs.existsSync(d))fs.rmSync(d,{recursive:true})});fs.readdirSync('.').filter(f=>f.endsWith('.vsix')).forEach(f=>fs.unlinkSync(f));console.log('Cleaned')\"",

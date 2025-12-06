@@ -2,13 +2,14 @@ import * as vscode from "vscode";
 import { getFileInfo, convertToWebP, saveWebPFile } from "./webpConverter";
 import { getWebviewContent } from "./webviewContent";
 import { getSetupDialogContent } from "./setupDialogContent";
-import { FileInfo } from "./types";
+import { FileInfo, WebPData } from "./types";
 import { setExtensionPath } from "./imageProcessor";
 
 interface BatchImageData {
   filePath: string;
   fileInfo: FileInfo;
   quality: number;
+  cachedWebP?: WebPData; // Cache for converted WebP data
 }
 
 export function activate(context: vscode.ExtensionContext) {
@@ -145,13 +146,14 @@ async function showBatchPreviewWindow(
 ) {
   const batchData: BatchImageData[] = [];
 
-  // Load all file info
+  // Load all file info upfront
   for (const uri of uris) {
     const fileInfo = await getFileInfo(uri.fsPath);
     batchData.push({
       filePath: uri.fsPath,
       fileInfo,
       quality: baseQuality,
+      cachedWebP: undefined,
     });
   }
 
@@ -167,23 +169,79 @@ async function showBatchPreviewWindow(
     }
   );
 
-  async function updatePreview(index: number) {
+  // Get or convert WebP data with caching
+  async function getWebPData(index: number): Promise<WebPData> {
+    const item = batchData[index];
+    // Return cached data if quality hasn't changed
+    if (item.cachedWebP && item.cachedWebP.quality === item.quality) {
+      return item.cachedWebP;
+    }
+    // Convert and cache
+    const webpData = await convertToWebP(item.filePath, item.quality, lossless);
+    item.cachedWebP = webpData;
+    return webpData;
+  }
+
+  // Navigate to image using postMessage (no full HTML rebuild)
+  async function navigateToImage(index: number) {
     currentIndex = index;
     const current = batchData[currentIndex];
-    const webpData = await convertToWebP(current.filePath, current.quality, lossless);
+    const webpData = await getWebPData(currentIndex);
+
+    // Send navigation data to webview instead of rebuilding HTML
+    panel.webview.postMessage({
+      command: "navigateToImage",
+      data: {
+        fileName: current.fileInfo.fileName,
+        format: current.fileInfo.format,
+        base64Image: current.fileInfo.base64Image,
+        width: current.fileInfo.width,
+        height: current.fileInfo.height,
+        fileSize: current.fileInfo.fileSize,
+        base64WebP: webpData.base64WebP,
+        webpSize: webpData.webpSize,
+        quality: current.quality,
+        currentIndex,
+        totalImages: batchData.length,
+      },
+    });
+  }
+
+  // Initial render - only time we build full HTML
+  async function initialRender() {
+    const current = batchData[0];
+    const webpData = await getWebPData(0);
+    current.cachedWebP = webpData;
 
     panel.webview.html = getWebviewContent(
       panel.webview,
       context,
       current.fileInfo,
       webpData,
-      currentIndex,
+      0,
       batchData.length
     );
+
+    // Pre-cache adjacent images in background for faster navigation
+    prefetchAdjacentImages(0);
+  }
+
+  // Prefetch adjacent images for smoother navigation
+  async function prefetchAdjacentImages(index: number) {
+    const prefetchIndices = [index - 1, index + 1].filter((i) => i >= 0 && i < batchData.length);
+
+    for (const i of prefetchIndices) {
+      if (!batchData[i].cachedWebP) {
+        // Convert in background without blocking
+        getWebPData(i).catch(() => {
+          // Ignore prefetch errors
+        });
+      }
+    }
   }
 
   // Show first image
-  await updatePreview(0);
+  await initialRender();
 
   // Handle messages from the webview
   panel.webview.onDidReceiveMessage(
@@ -192,11 +250,10 @@ async function showBatchPreviewWindow(
         case "updateQuality":
           const quality = message.quality;
           batchData[currentIndex].quality = quality;
-          const updatedWebpData = await convertToWebP(
-            batchData[currentIndex].filePath,
-            quality,
-            lossless
-          );
+          // Invalidate cache since quality changed
+          batchData[currentIndex].cachedWebP = undefined;
+
+          const updatedWebpData = await getWebPData(currentIndex);
           panel.webview.postMessage({
             command: "updatePreview",
             data: updatedWebpData,
@@ -205,13 +262,15 @@ async function showBatchPreviewWindow(
 
         case "previous":
           if (currentIndex > 0) {
-            await updatePreview(currentIndex - 1);
+            await navigateToImage(currentIndex - 1);
+            prefetchAdjacentImages(currentIndex);
           }
           break;
 
         case "next":
           if (currentIndex < batchData.length - 1) {
-            await updatePreview(currentIndex + 1);
+            await navigateToImage(currentIndex + 1);
+            prefetchAdjacentImages(currentIndex);
           }
           break;
 
