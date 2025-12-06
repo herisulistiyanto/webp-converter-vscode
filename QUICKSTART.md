@@ -12,7 +12,7 @@ Get up and running with WebP Converter in minutes!
 ### Option 1: Install from VSIX (Recommended)
 
 ```bash
-code --install-extension webp-converter-1.0.0.vsix
+code --install-extension webp4vscode-x.x.x.vsix
 ```
 
 Or in VS Code: **Extensions** → **⋯** → **Install from VSIX...**
@@ -34,7 +34,7 @@ npm run package
 npx vsce package --no-dependencies --allow-missing-repository
 
 # Install the generated VSIX
-code --install-extension webp-converter-1.0.0.vsix
+code --install-extension webp4vscode-x.x.x.vsix
 ```
 
 ## Using the Extension

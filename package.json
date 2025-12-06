@@ -1,7 +1,7 @@
 {
   "private": true,
-  "name": "webp-converter",
-  "displayName": "WebP Converter",
+  "name": "webp4vscode",
+  "displayName": "WebP Converter for VSCode",
   "description": "Convert images to WebP format with quality preview",
   "version": "0.0.1",
   "license": "MIT",
