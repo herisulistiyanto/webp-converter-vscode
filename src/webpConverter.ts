@@ -1,19 +1,18 @@
 import * as path from "path";
 import * as fs from "fs";
-import sharp from "sharp";
 import { FileInfo, WebPData } from "./types";
 import { getMimeType } from "./utils";
+import { decodeImage, encodeWebP, getImageInfo } from "./imageProcessor";
 
 export async function getFileInfo(filePath: string): Promise<FileInfo> {
   const stats = fs.statSync(filePath);
-  const image = sharp(filePath);
-  const metadata = await image.metadata();
+  const info = getImageInfo(filePath);
 
   const fileName = path.basename(filePath);
   const fileSize = stats.size;
-  const width = metadata.width || 0;
-  const height = metadata.height || 0;
-  const format = metadata.format?.toUpperCase() || "UNKNOWN";
+  const width = info.width;
+  const height = info.height;
+  const format = info.format;
 
   // Read file as base64
   const imageBuffer = fs.readFileSync(filePath);
@@ -36,14 +35,11 @@ export async function convertToWebP(
   quality: number,
   lossless: boolean = false
 ): Promise<WebPData> {
-  const image = sharp(filePath);
-  const webpBuffer = await image
-    .webp({
-      quality: lossless ? 100 : quality,
-      lossless: lossless,
-      effort: 4,
-    })
-    .toBuffer();
+  // Decode the input image to RGBA pixels
+  const imageData = await decodeImage(filePath);
+
+  // Encode to WebP
+  const webpBuffer = await encodeWebP(imageData, quality, lossless);
 
   const base64WebP = webpBuffer.toString("base64");
   const webpSize = webpBuffer.length;
@@ -66,13 +62,14 @@ export async function saveWebPFile(
   const baseName = path.basename(originalPath, ext);
   const outputPath = path.join(dir, `${baseName}.webp`);
 
-  await sharp(originalPath)
-    .webp({
-      quality: lossless ? 100 : quality,
-      lossless: lossless,
-      effort: 4,
-    })
-    .toFile(outputPath);
+  // Decode the input image to RGBA pixels
+  const imageData = await decodeImage(originalPath);
+
+  // Encode to WebP
+  const webpBuffer = await encodeWebP(imageData, quality, lossless);
+
+  // Write the file
+  fs.writeFileSync(outputPath, webpBuffer);
 
   if (deleteOriginal) {
     fs.unlinkSync(originalPath);

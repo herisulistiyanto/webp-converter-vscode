@@ -3,16 +3,14 @@
   "displayName": "WebP Converter",
   "description": "Convert images to WebP format with quality preview",
   "version": "1.0.0",
-  "publisher": "your-publisher-name",
+  "publisher": "kjokkenkoddinger",
   "engines": {
     "vscode": "^1.75.0"
   },
   "categories": [
     "Other"
   ],
-  "activationEvents": [
-    "onCommand:webp-converter.convertToWebP"
-  ],
+  "activationEvents": [],
   "main": "./out/extension.js",
   "contributes": {
     "commands": [
@@ -32,9 +30,11 @@
     }
   },
   "scripts": {
-    "vscode:prepublish": "npm run compile",
+    "vscode:prepublish": "npm run package",
     "compile": "tsc -p ./",
     "watch": "tsc -watch -p ./",
+    "package": "node esbuild.config.js --production",
+    "package:dev": "node esbuild.config.js",
     "pretest": "npm run compile && npm run lint",
     "lint": "eslint src --ext ts",
     "format": "prettier --write \"src/**/*.{ts,js,json}\"",
@@ -42,14 +42,23 @@
   },
   "devDependencies": {
     "@types/node": "^18.0.0",
+    "@types/omggif": "^1.0.5",
+    "@types/pngjs": "^6.0.5",
     "@types/vscode": "^1.75.0",
     "@typescript-eslint/eslint-plugin": "^5.0.0",
     "@typescript-eslint/parser": "^5.0.0",
+    "esbuild": "^0.27.1",
     "eslint": "^8.0.0",
     "prettier": "^3.7.4",
     "typescript": "^5.0.0"
   },
   "dependencies": {
-    "sharp": "^0.34.5"
+    "bmp-js": "^0.1.0",
+    "decode-ico": "^0.4.1",
+    "jpeg-js": "^0.4.4",
+    "omggif": "^1.0.10",
+    "pngjs": "^7.0.0",
+    "utif": "^3.1.0",
+    "webp-wasm": "^1.0.6"
   }
 }

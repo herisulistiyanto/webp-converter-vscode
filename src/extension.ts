@@ -3,6 +3,7 @@ import { getFileInfo, convertToWebP, saveWebPFile } from "./webpConverter";
 import { getWebviewContent } from "./webviewContent";
 import { getSetupDialogContent } from "./setupDialogContent";
 import { FileInfo } from "./types";
+import { setExtensionPath } from "./imageProcessor";
 
 interface BatchImageData {
   filePath: string;
@@ -12,6 +13,9 @@ interface BatchImageData {
 
 export function activate(context: vscode.ExtensionContext) {
   console.log("WebP Converter extension is now active");
+
+  // Set the extension path for the imageProcessor to locate WASM files
+  setExtensionPath(context.extensionPath);
 
   let disposable = vscode.commands.registerCommand(
     "webp-converter.convertToWebP",
