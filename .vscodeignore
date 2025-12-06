@@ -1,6 +1,7 @@
 .vscode/**
 .vscode-test/**
 src/**
+scripts/**
 .gitignore
 .yarnrc
 vsc-extension-quickstart.md
@@ -8,4 +9,11 @@ vsc-extension-quickstart.md
 **/.eslintrc.json
 **/*.map
 **/*.ts
+!out/**
+setup.sh
+.prettierrc
+.prettierignore
+example/**
+esbuild.config.js
+dist/**
 node_modules/**
