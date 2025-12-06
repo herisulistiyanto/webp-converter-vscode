@@ -1,19 +1,19 @@
-import * as vscode from 'vscode';
-import { FileInfo, WebPData } from './types';
+import * as vscode from "vscode";
+import { FileInfo, WebPData } from "./types";
 
 export function getWebviewContent(
-    webview: vscode.Webview,
-    context: vscode.ExtensionContext,
-    fileInfo: FileInfo,
-    webpData: WebPData,
-    currentIndex: number = 0,
-    totalImages: number = 1
+  webview: vscode.Webview,
+  context: vscode.ExtensionContext,
+  fileInfo: FileInfo,
+  webpData: WebPData,
+  currentIndex: number = 0,
+  totalImages: number = 1
 ): string {
-    const isBatchMode = totalImages > 1;
-    const isFirstImage = currentIndex === 0;
-    const isLastImage = currentIndex === totalImages - 1;
+  const isBatchMode = totalImages > 1;
+  const isFirstImage = currentIndex === 0;
+  const isLastImage = currentIndex === totalImages - 1;
 
-    return `<!DOCTYPE html>
+  return `<!DOCTYPE html>
 <html lang="en">
 <head>
     <meta charset="UTF-8">
@@ -296,7 +296,11 @@ export function getWebviewContent(
     <div class="header">
         <h1>Preview and Adjust Converted Images</h1>
         <div class="file-path">${fileInfo.fileName}</div>
-        ${isBatchMode ? `<div class="batch-info">Image ${currentIndex + 1} of ${totalImages}</div>` : ''}
+        ${
+          isBatchMode
+            ? `<div class="batch-info">Image ${currentIndex + 1} of ${totalImages}</div>`
+            : ""
+        }
     </div>
 
     <div class="preview-container">
@@ -352,16 +356,21 @@ export function getWebviewContent(
             >
         </div>
         <div class="buttons">
-            ${isBatchMode ? `
-                <button id="previous-btn" ${isFirstImage ? 'disabled' : ''}>Previous</button>
-                <button id="next-btn" ${isLastImage ? 'disabled' : ''}>${isLastImage ? 'Review' : 'Next'}</button>
-            ` : ''}
+            ${
+              isBatchMode
+                ? `
+                <button id="previous-btn" ${isFirstImage ? "disabled" : ""}>Previous</button>
+                <button id="next-btn" ${isLastImage ? "disabled" : ""}>Next</button>
+            `
+                : ""
+            }
             <button id="cancel-btn">Cancel</button>
-            ${isBatchMode && isLastImage ?
-                `<button id="finish-btn" class="primary">Finish Conversion</button>` :
-                isBatchMode ?
-                `<button id="finish-btn" class="primary" disabled>Finish Conversion</button>` :
-                `<button id="finish-btn" class="primary">Finish</button>`
+            ${
+              isBatchMode && isLastImage
+                ? `<button id="finish-btn" class="primary">Finish Conversion</button>`
+                : isBatchMode
+                  ? `<button id="finish-btn" class="primary" disabled>Finish Conversion</button>`
+                  : `<button id="finish-btn" class="primary">Finish</button>`
             }
         </div>
     </div>

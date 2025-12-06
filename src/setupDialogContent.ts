@@ -1,19 +1,19 @@
-import * as vscode from 'vscode';
-import { FileInfo } from './types';
-import { formatFileSize } from './utils';
+import * as vscode from "vscode";
+import { FileInfo } from "./types";
+import { formatFileSize } from "./utils";
 
 export function getSetupDialogContent(
-    webview: vscode.Webview,
-    context: vscode.ExtensionContext,
-    fileInfo: FileInfo,
-    allFileInfo: FileInfo[] = []
+  webview: vscode.Webview,
+  context: vscode.ExtensionContext,
+  fileInfo: FileInfo,
+  allFileInfo: FileInfo[] = []
 ): string {
-    const isBatch = allFileInfo.length > 1;
-    const filesInfo = isBatch ? allFileInfo : [fileInfo];
-    const totalOriginalSize = filesInfo.reduce((sum, f) => sum + f.fileSize, 0);
-    const originalSize = formatFileSize(totalOriginalSize);
+  const isBatch = allFileInfo.length > 1;
+  const filesInfo = isBatch ? allFileInfo : [fileInfo];
+  const totalOriginalSize = filesInfo.reduce((sum, f) => sum + f.fileSize, 0);
+  const originalSize = formatFileSize(totalOriginalSize);
 
-    return `<!DOCTYPE html>
+  return `<!DOCTYPE html>
 <html lang="en">
 <head>
     <meta charset="UTF-8">
@@ -450,10 +450,11 @@ export function getSetupDialogContent(
     <div class="container">
         <div class="header">
             <h1>WebP Converter Setup</h1>
-            ${isBatch ?
-                `<div class="file-name">Batch Conversion</div>
-                <div class="file-info">${filesInfo.length} images • Total: ${originalSize}</div>` :
-                `<div class="file-name">${fileInfo.fileName}</div>
+            ${
+              isBatch
+                ? `<div class="file-name">Batch Conversion</div>
+                <div class="file-info">${filesInfo.length} images • Total: ${originalSize}</div>`
+                : `<div class="file-name">${fileInfo.fileName}</div>
                 <div class="file-info">${fileInfo.width} × ${fileInfo.height} • ${originalSize}</div>`
             }
         </div>
@@ -509,20 +510,28 @@ export function getSetupDialogContent(
 
         <div class="size-preview">
             <div class="size-row">
-                <span class="size-label">${isBatch ? 'Total Original Size:' : 'Original Size:'}</span>
+                <span class="size-label">${
+                  isBatch ? "Total Original Size:" : "Original Size:"
+                }</span>
                 <span class="size-value">${originalSize}</span>
             </div>
             <div class="size-row">
-                <span class="size-label">${isBatch ? 'Total Estimated WebP Size:' : 'Estimated WebP Size:'}</span>
+                <span class="size-label">${
+                  isBatch ? "Total Estimated WebP Size:" : "Estimated WebP Size:"
+                }</span>
                 <span class="size-value" id="webp-size">Calculating...</span>
             </div>
             <div class="size-row">
-                <span class="size-label">${isBatch ? 'Total Size Reduction:' : 'Size Reduction:'}</span>
+                <span class="size-label">${
+                  isBatch ? "Total Size Reduction:" : "Size Reduction:"
+                }</span>
                 <span class="size-value highlight" id="reduction">-</span>
             </div>
         </div>
 
-        ${isBatch ? `
+        ${
+          isBatch
+            ? `
         <div class="batch-section">
             <div class="batch-header" id="batch-toggle">
                 <div class="batch-header-left">
@@ -533,19 +542,29 @@ export function getSetupDialogContent(
             </div>
             <div class="batch-content" id="batch-content">
                 <div class="batch-list">
-                    ${filesInfo.map((file, index) => `
+                    ${filesInfo
+                      .map(
+                        (file, index) => `
                         <div class="batch-item">
-                            <div class="batch-item-name" title="${file.fileName}">${index + 1}. ${file.fileName}</div>
+                            <div class="batch-item-name" title="${
+                              file.fileName
+                            }">${index + 1}. ${file.fileName}</div>
                             <div class="batch-item-info">
                                 ${file.width} × ${file.height}
-                                <span class="batch-item-size">${formatFileSize(file.fileSize)}</span>
+                                <span class="batch-item-size">${formatFileSize(
+                                  file.fileSize
+                                )}</span>
                             </div>
                         </div>
-                    `).join('')}
+                    `
+                      )
+                      .join("")}
                 </div>
             </div>
         </div>
-        ` : ''}
+        `
+            : ""
+        }
 
         <div class="form-group">
             <label class="checkbox-container">
