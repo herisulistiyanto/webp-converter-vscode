@@ -64,7 +64,6 @@ The extension works out of the box with sensible defaults:
 
 ## Known Limitations
 
-- The "Difference" column currently shows placeholder text (future enhancement could show pixel-by-pixel differences)
 - Large images (>10MB) may take a few seconds to process
 - Animated GIFs will be converted to static WebP images
 
@@ -72,7 +71,7 @@ The extension works out of the box with sensible defaults:
 
 - [x] Batch conversion support (multiple files)
 - [x] Actual visual difference comparison
-- [ ] Lossless WebP option
+- [x] Lossless WebP option
 - [x] Previous/Next navigation for batch operations
 
 ## License
