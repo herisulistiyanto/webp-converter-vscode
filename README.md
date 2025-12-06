@@ -17,8 +17,8 @@ Convert your images to WebP format with a visual quality preview, inspired by An
 
 ### From VSIX Package
 
-1. Download `webp-converter-x.x.x.vsix`
-2. Install via command line: `code --install-extension webp-converter-x.x.x.vsix`
+1. Download `webp4vscode-x.x.x.vsix`
+2. Install via command line: `code --install-extension webp4vscode-x.x.x.vsix`
 3. Or install via VS Code: Extensions → ⋯ → Install from VSIX...
 
 ### From Source
