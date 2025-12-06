@@ -47,7 +47,7 @@ export async function convertToWebP(filePath: string, quality: number): Promise<
     };
 }
 
-export async function saveWebPFile(originalPath: string, quality: number): Promise<void> {
+export async function saveWebPFile(originalPath: string, quality: number, deleteOriginal: boolean = false): Promise<void> {
     const dir = path.dirname(originalPath);
     const ext = path.extname(originalPath);
     const baseName = path.basename(originalPath, ext);
@@ -56,4 +56,8 @@ export async function saveWebPFile(originalPath: string, quality: number): Promi
     await sharp(originalPath)
         .webp({ quality, effort: 4 })
         .toFile(outputPath);
+
+    if (deleteOriginal) {
+        fs.unlinkSync(originalPath);
+    }
 }

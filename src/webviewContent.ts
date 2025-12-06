@@ -1,6 +1,5 @@
 import * as vscode from 'vscode';
 import { FileInfo, WebPData } from './types';
-import { formatFileSize } from './utils';
 
 export function getWebviewContent(
     webview: vscode.Webview,
@@ -10,9 +9,6 @@ export function getWebviewContent(
     currentIndex: number = 0,
     totalImages: number = 1
 ): string {
-    const originalSize = formatFileSize(fileInfo.fileSize);
-    const webpSize = formatFileSize(webpData.webpSize);
-    const percentage = ((webpData.webpSize / fileInfo.fileSize) * 100).toFixed(0);
     const isBatchMode = totalImages > 1;
     const isFirstImage = currentIndex === 0;
     const isLastImage = currentIndex === totalImages - 1;
@@ -77,6 +73,7 @@ export function getWebviewContent(
             background-color: #252526;
             display: flex;
             flex-direction: column;
+            min-height: 0;
         }
 
         .column-header {
@@ -86,31 +83,80 @@ export function getWebviewContent(
             font-weight: 500;
             border-bottom: 1px solid #3e3e3e;
             background-color: #2d2d30;
+            flex-shrink: 0;
         }
 
         .image-wrapper {
             flex: 1;
-            display: flex;
-            align-items: center;
-            justify-content: center;
-            padding: 20px;
-            overflow: auto;
             position: relative;
+            min-height: 0;
+            min-width: 0;
+            overflow: hidden;
         }
 
         .image-wrapper img {
-            max-width: 100%;
-            max-height: 100%;
+            position: absolute;
+            top: 50%;
+            left: 50%;
+            transform: translate(-50%, -50%);
+            max-width: calc(100% - 40px);
+            max-height: calc(100% - 40px);
+            width: auto;
+            height: auto;
             object-fit: contain;
-            display: block;
+            cursor: pointer;
+            transition: opacity 0.2s;
+        }
+
+        .image-wrapper img:hover {
+            opacity: 0.8;
         }
 
         .image-info {
-            padding: 12px;
+            padding: 15px 12px;
             text-align: center;
             font-size: 13px;
+            line-height: 1.6;
             border-top: 1px solid #3e3e3e;
             background-color: #2d2d30;
+        }
+
+        .image-info strong {
+            color: #cccccc;
+            font-weight: 600;
+        }
+
+        .size-highlight {
+            color: #4ec9b0;
+            font-weight: 500;
+        }
+
+        .size-comparison {
+            margin-bottom: 20px;
+            padding: 15px;
+            background-color: #252526;
+            border: 1px solid #3e3e3e;
+            border-radius: 4px;
+        }
+
+        .size-comparison-row {
+            display: flex;
+            justify-content: space-between;
+            margin-bottom: 8px;
+            font-size: 13px;
+        }
+
+        .size-comparison-row:last-child {
+            margin-bottom: 0;
+        }
+
+        .size-label {
+            color: #858585;
+        }
+
+        .size-value {
+            color: #cccccc;
+            font-weight: 500;
         }
 
         .controls {
@@ -191,6 +237,59 @@ export function getWebviewContent(
             opacity: 0.5;
             cursor: not-allowed;
         }
+
+        /* Zoom Modal */
+        .zoom-modal {
+            display: none;
+            position: fixed;
+            z-index: 1000;
+            left: 0;
+            top: 0;
+            width: 100%;
+            height: 100%;
+            background-color: rgba(0, 0, 0, 0.9);
+            align-items: center;
+            justify-content: center;
+            cursor: zoom-out;
+        }
+
+        .zoom-modal.active {
+            display: flex;
+        }
+
+        .zoom-modal img {
+            max-width: 95%;
+            max-height: 95%;
+            object-fit: contain;
+            cursor: zoom-out;
+        }
+
+        .zoom-close {
+            position: absolute;
+            top: 20px;
+            right: 30px;
+            color: #f1f1f1;
+            font-size: 40px;
+            font-weight: bold;
+            cursor: pointer;
+            user-select: none;
+        }
+
+        .zoom-close:hover {
+            color: #bbb;
+        }
+
+        .zoom-label {
+            position: absolute;
+            bottom: 20px;
+            left: 50%;
+            transform: translateX(-50%);
+            color: #f1f1f1;
+            font-size: 14px;
+            background-color: rgba(0, 0, 0, 0.7);
+            padding: 10px 20px;
+            border-radius: 4px;
+        }
     </style>
 </head>
 <body>
@@ -207,8 +306,7 @@ export function getWebviewContent(
                 <img src="${fileInfo.base64Image}" alt="Original">
             </div>
             <div class="image-info">
-                ${fileInfo.width} × ${fileInfo.height}<br>
-                ${originalSize}
+                <div>${fileInfo.width} × ${fileInfo.height}</div>
             </div>
         </div>
 
@@ -217,14 +315,28 @@ export function getWebviewContent(
             <div class="image-wrapper">
                 <img id="webp-preview" src="${webpData.base64WebP}" alt="WebP">
             </div>
-            <div class="image-info" id="webp-info">
-                ${fileInfo.width} × ${fileInfo.height}<br>
-                <span id="webp-size">${webpSize} (<span id="percentage">${percentage}</span>% of original size)</span>
+            <div class="image-info">
+                <div>${fileInfo.width} × ${fileInfo.height}</div>
             </div>
         </div>
     </div>
 
     <div class="controls">
+        <div class="size-comparison">
+            <div class="size-comparison-row">
+                <span class="size-label">Original Size:</span>
+                <span class="size-value" id="original-size">-</span>
+            </div>
+            <div class="size-comparison-row">
+                <span class="size-label">WebP Size:</span>
+                <span class="size-value size-highlight" id="webp-size">-</span>
+            </div>
+            <div class="size-comparison-row">
+                <span class="size-label">Reduction:</span>
+                <span class="size-value size-highlight" id="reduction">-</span>
+            </div>
+        </div>
+
         <div class="quality-control">
             <div class="quality-label">
                 <span>Quality (Default 75%)</span>
@@ -254,13 +366,21 @@ export function getWebviewContent(
         </div>
     </div>
 
+    <!-- Zoom Modal -->
+    <div class="zoom-modal" id="zoom-modal">
+        <span class="zoom-close" id="zoom-close">&times;</span>
+        <img id="zoom-image" src="" alt="Zoomed">
+        <div class="zoom-label" id="zoom-label"></div>
+    </div>
+
     <script>
         const vscode = acquireVsCodeApi();
         const qualitySlider = document.getElementById('quality-slider');
         const qualityValue = document.getElementById('quality-value');
         const webpPreview = document.getElementById('webp-preview');
+        const originalSizeSpan = document.getElementById('original-size');
         const webpSizeSpan = document.getElementById('webp-size');
-        const percentageSpan = document.getElementById('percentage');
+        const reductionSpan = document.getElementById('reduction');
         const cancelBtn = document.getElementById('cancel-btn');
         const finishBtn = document.getElementById('finish-btn');
         const previousBtn = document.getElementById('previous-btn');
@@ -268,6 +388,56 @@ export function getWebviewContent(
 
         let currentQuality = ${webpData.quality};
         let debounceTimer;
+        const originalSize = ${fileInfo.fileSize};
+
+        // Zoom functionality
+        const zoomModal = document.getElementById('zoom-modal');
+        const zoomImage = document.getElementById('zoom-image');
+        const zoomLabel = document.getElementById('zoom-label');
+        const zoomClose = document.getElementById('zoom-close');
+        const originalImage = document.querySelector('.preview-column:first-child .image-wrapper img');
+        const webpImage = document.querySelector('.preview-column:last-child .image-wrapper img');
+
+        function openZoom(imgSrc, label) {
+            zoomImage.src = imgSrc;
+            zoomLabel.textContent = label;
+            zoomModal.classList.add('active');
+        }
+
+        function closeZoom() {
+            zoomModal.classList.remove('active');
+        }
+
+        if (originalImage) {
+            originalImage.addEventListener('click', () => {
+                openZoom(originalImage.src, 'Original - ${fileInfo.format}');
+            });
+        }
+
+        if (webpImage) {
+            webpImage.addEventListener('click', () => {
+                openZoom(webpImage.src, 'WebP Preview');
+            });
+        }
+
+        if (zoomClose) {
+            zoomClose.addEventListener('click', closeZoom);
+        }
+
+        if (zoomModal) {
+            zoomModal.addEventListener('click', (e) => {
+                if (e.target === zoomModal || e.target === zoomImage) {
+                    closeZoom();
+                }
+            });
+        }
+
+        // ESC key to close zoom
+        document.addEventListener('keydown', (e) => {
+            if (e.key === 'Escape' && zoomModal.classList.contains('active')) {
+                closeZoom();
+            }
+        });
 
         qualitySlider.addEventListener('input', (e) => {
             currentQuality = parseInt(e.target.value);
@@ -317,6 +487,20 @@ export function getWebviewContent(
             }
         }
 
+        // Initialize size display
+        function updateSizeDisplay(webpSize) {
+            const formattedOriginal = formatFileSize(originalSize);
+            const formattedWebP = formatFileSize(webpSize);
+            const reduction = ((1 - webpSize / originalSize) * 100).toFixed(1);
+
+            originalSizeSpan.textContent = formattedOriginal;
+            webpSizeSpan.textContent = formattedWebP;
+            reductionSpan.textContent = reduction + '% smaller';
+        }
+
+        // Initialize on load
+        updateSizeDisplay(${webpData.webpSize});
+
         // Listen for messages from the extension
         window.addEventListener('message', event => {
             const message = event.data;
@@ -324,13 +508,7 @@ export function getWebviewContent(
                 case 'updatePreview':
                     const data = message.data;
                     webpPreview.src = data.base64WebP;
-
-                    const originalSize = ${fileInfo.fileSize};
-                    const newSize = data.webpSize;
-                    const formattedSize = formatFileSize(newSize);
-                    const percent = ((newSize / originalSize) * 100).toFixed(0);
-
-                    webpSizeSpan.innerHTML = formattedSize + ' (<span id="percentage">' + percent + '</span>% of original size)';
+                    updateSizeDisplay(data.webpSize);
                     break;
             }
         });
