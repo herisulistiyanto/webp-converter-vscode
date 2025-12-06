@@ -53,7 +53,7 @@ export function activate(context: vscode.ExtensionContext) {
                             // Calculate total size for all images
                             let totalWebpSize = 0;
                             for (const uri of uris) {
-                                const previewData = await convertToWebP(uri.fsPath, message.quality);
+                                const previewData = await convertToWebP(uri.fsPath, message.quality, message.lossless);
                                 totalWebpSize += previewData.webpSize;
                             }
                             setupPanel.webview.postMessage({
@@ -64,6 +64,7 @@ export function activate(context: vscode.ExtensionContext) {
 
                         case 'continue':
                             const baseQuality = message.quality;
+                            const lossless = message.lossless || false;
                             const showPreview = message.showPreview;
                             const deleteOriginal = message.deleteOriginal;
 
@@ -71,10 +72,10 @@ export function activate(context: vscode.ExtensionContext) {
 
                             if (showPreview) {
                                 // Show preview window for batch editing
-                                await showBatchPreviewWindow(context, uris, baseQuality, deleteOriginal);
+                                await showBatchPreviewWindow(context, uris, baseQuality, deleteOriginal, lossless);
                             } else {
                                 // Instant batch conversion
-                                await batchConvert(uris, baseQuality, deleteOriginal);
+                                await batchConvert(uris, baseQuality, deleteOriginal, lossless);
                             }
                             break;
 
@@ -92,7 +93,7 @@ export function activate(context: vscode.ExtensionContext) {
     context.subscriptions.push(disposable);
 }
 
-async function batchConvert(uris: vscode.Uri[], quality: number, deleteOriginal: boolean = false) {
+async function batchConvert(uris: vscode.Uri[], quality: number, deleteOriginal: boolean = false, lossless: boolean = false) {
     const total = uris.length;
 
     await vscode.window.withProgress({
@@ -105,14 +106,14 @@ async function batchConvert(uris: vscode.Uri[], quality: number, deleteOriginal:
                 increment: (100 / total),
                 message: `${i + 1}/${total} - Converting ${uris[i].fsPath.split('/').pop()}`
             });
-            await saveWebPFile(uris[i].fsPath, quality, deleteOriginal);
+            await saveWebPFile(uris[i].fsPath, quality, deleteOriginal, lossless);
         }
     });
 
     vscode.window.showInformationMessage(`Successfully converted ${total} image${total > 1 ? 's' : ''} to WebP!`);
 }
 
-async function showBatchPreviewWindow(context: vscode.ExtensionContext, uris: vscode.Uri[], baseQuality: number, deleteOriginal: boolean = false) {
+async function showBatchPreviewWindow(context: vscode.ExtensionContext, uris: vscode.Uri[], baseQuality: number, deleteOriginal: boolean = false, lossless: boolean = false) {
     const batchData: BatchImageData[] = [];
 
     // Load all file info
@@ -140,7 +141,7 @@ async function showBatchPreviewWindow(context: vscode.ExtensionContext, uris: vs
     async function updatePreview(index: number) {
         currentIndex = index;
         const current = batchData[currentIndex];
-        const webpData = await convertToWebP(current.filePath, current.quality);
+        const webpData = await convertToWebP(current.filePath, current.quality, lossless);
 
         panel.webview.html = getWebviewContent(
             panel.webview,
@@ -162,7 +163,7 @@ async function showBatchPreviewWindow(context: vscode.ExtensionContext, uris: vs
                 case 'updateQuality':
                     const quality = message.quality;
                     batchData[currentIndex].quality = quality;
-                    const updatedWebpData = await convertToWebP(batchData[currentIndex].filePath, quality);
+                    const updatedWebpData = await convertToWebP(batchData[currentIndex].filePath, quality, lossless);
                     panel.webview.postMessage({
                         command: 'updatePreview',
                         data: updatedWebpData
@@ -195,7 +196,7 @@ async function showBatchPreviewWindow(context: vscode.ExtensionContext, uris: vs
                                 increment: (100 / batchData.length),
                                 message: `${i + 1}/${batchData.length} - Converting ${batchData[i].fileInfo.fileName}`
                             });
-                            await saveWebPFile(batchData[i].filePath, batchData[i].quality, deleteOriginal);
+                            await saveWebPFile(batchData[i].filePath, batchData[i].quality, deleteOriginal, lossless);
                         }
                     });
 

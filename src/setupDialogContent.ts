@@ -76,6 +76,47 @@ export function getSetupDialogContent(
             color: #cccccc;
         }
 
+        .radio-group {
+            display: flex;
+            flex-direction: column;
+            gap: 10px;
+        }
+
+        .radio-container {
+            display: flex;
+            align-items: center;
+            gap: 10px;
+            padding: 10px;
+            background-color: #252526;
+            border: 1px solid #3e3e3e;
+            border-radius: 4px;
+            cursor: pointer;
+            transition: background-color 0.2s;
+        }
+
+        .radio-container:hover {
+            background-color: #2d2d30;
+        }
+
+        .radio-container input[type="radio"] {
+            width: 16px;
+            height: 16px;
+            cursor: pointer;
+        }
+
+        .radio-label {
+            font-size: 13px;
+            cursor: pointer;
+            flex: 1;
+        }
+
+        .quality-box {
+            padding: 15px;
+            background-color: #252526;
+            border: 1px solid #3e3e3e;
+            border-radius: 4px;
+        }
+
         .quality-controls {
             display: flex;
             gap: 15px;
@@ -94,6 +135,10 @@ export function getSetupDialogContent(
             -webkit-appearance: none;
         }
 
+        .slider:disabled {
+            cursor: not-allowed;
+        }
+
         .slider::-webkit-slider-thumb {
             -webkit-appearance: none;
             appearance: none;
@@ -104,6 +149,10 @@ export function getSetupDialogContent(
             border-radius: 50%;
         }
 
+        .slider:disabled::-webkit-slider-thumb {
+            cursor: not-allowed;
+        }
+
         .slider::-moz-range-thumb {
             width: 16px;
             height: 16px;
@@ -111,6 +160,10 @@ export function getSetupDialogContent(
             cursor: pointer;
             border-radius: 50%;
             border: none;
+        }
+
+        .slider:disabled::-moz-range-thumb {
+            cursor: not-allowed;
         }
 
         .quality-input {
@@ -127,6 +180,56 @@ export function getSetupDialogContent(
         .quality-input:focus {
             outline: none;
             border-color: #007acc;
+        }
+
+        .quality-input:disabled {
+            cursor: not-allowed;
+            color: #858585;
+        }
+
+        .quality-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 12px;
+            font-size: 13px;
+            font-weight: 500;
+            color: #cccccc;
+        }
+
+        .preview-option {
+            margin-top: 12px;
+            padding-top: 12px;
+            border-top: 1px solid #3e3e3e;
+        }
+
+        .checkbox-container-inline {
+            display: flex;
+            align-items: center;
+            gap: 8px;
+            cursor: pointer;
+        }
+
+        .checkbox-container-inline input[type="checkbox"] {
+            cursor: pointer;
+        }
+
+        .checkbox-container-inline input[type="checkbox"]:disabled {
+            cursor: not-allowed;
+            opacity: 0.5;
+        }
+
+        .checkbox-container-inline .checkbox-label {
+            font-size: 13px;
+            color: #cccccc;
+        }
+
+        .checkbox-container-inline:hover .checkbox-label {
+            color: #ffffff;
+        }
+
+        .checkbox-container-inline input[type="checkbox"]:disabled + .checkbox-label {
+            color: #858585;
         }
 
         .size-preview {
@@ -356,26 +459,51 @@ export function getSetupDialogContent(
         </div>
 
         <div class="form-group">
-            <label class="form-label">Quality (%)</label>
-            <div class="quality-controls">
-                <div class="slider-container">
+            <label class="form-label">Encoding Type</label>
+            <div class="radio-group">
+                <label class="radio-container">
+                    <input type="radio" name="encoding-type" value="lossless">
+                    <span class="radio-label">Lossless encoding (no quality loss)</span>
+                </label>
+                <label class="radio-container">
+                    <input type="radio" name="encoding-type" value="lossy" checked>
+                    <span class="radio-label">Lossy encoding (with quality control)</span>
+                </label>
+            </div>
+        </div>
+
+        <div class="form-group" id="quality-section">
+            <label class="form-label">Lossy Encoding Settings</label>
+            <div class="quality-box">
+                <div class="quality-header">
+                    <span>Quality (%)</span>
+                </div>
+                <div class="quality-controls">
+                    <div class="slider-container">
+                        <input
+                            type="range"
+                            id="quality-slider"
+                            class="slider"
+                            min="1"
+                            max="100"
+                            value="75"
+                        >
+                    </div>
                     <input
-                        type="range"
-                        id="quality-slider"
-                        class="slider"
+                        type="number"
+                        id="quality-input"
+                        class="quality-input"
                         min="1"
                         max="100"
                         value="75"
                     >
                 </div>
-                <input
-                    type="number"
-                    id="quality-input"
-                    class="quality-input"
-                    min="1"
-                    max="100"
-                    value="75"
-                >
+                <div class="preview-option">
+                    <label class="checkbox-container-inline">
+                        <input type="checkbox" id="show-preview" checked>
+                        <span class="checkbox-label">Show preview window before converting</span>
+                    </label>
+                </div>
             </div>
         </div>
 
@@ -421,13 +549,6 @@ export function getSetupDialogContent(
 
         <div class="form-group">
             <label class="checkbox-container">
-                <input type="checkbox" id="show-preview" checked>
-                <span class="checkbox-label">Show preview window before converting</span>
-            </label>
-        </div>
-
-        <div class="form-group">
-            <label class="checkbox-container">
                 <input type="checkbox" id="delete-original">
                 <span class="checkbox-label">Delete original files after conversion</span>
             </label>
@@ -443,17 +564,52 @@ export function getSetupDialogContent(
         const vscode = acquireVsCodeApi();
         const qualitySlider = document.getElementById('quality-slider');
         const qualityInput = document.getElementById('quality-input');
+        const qualitySection = document.getElementById('quality-section');
         const webpSizeSpan = document.getElementById('webp-size');
         const reductionSpan = document.getElementById('reduction');
         const showPreviewCheckbox = document.getElementById('show-preview');
         const deleteOriginalCheckbox = document.getElementById('delete-original');
         const cancelBtn = document.getElementById('cancel-btn');
         const continueBtn = document.getElementById('continue-btn');
+        const encodingTypeRadios = document.querySelectorAll('input[name="encoding-type"]');
 
         let currentQuality = 75;
+        let currentEncodingType = 'lossy';
         let debounceTimer;
         const originalSize = ${totalOriginalSize};
         const isBatch = ${isBatch};
+
+        // Encoding type toggle functionality
+        encodingTypeRadios.forEach(radio => {
+            radio.addEventListener('change', (e) => {
+                currentEncodingType = e.target.value;
+                if (currentEncodingType === 'lossless') {
+                    // Disable quality controls for lossless
+                    qualitySlider.disabled = true;
+                    qualityInput.disabled = true;
+                    qualitySlider.style.opacity = '0.5';
+                    qualityInput.style.opacity = '0.5';
+                    // Disable preview checkbox for lossless (preserve checked state)
+                    showPreviewCheckbox.disabled = true;
+                    // Request lossless size calculation
+                    vscode.postMessage({
+                        command: 'previewSize',
+                        quality: 100,
+                        lossless: true
+                    });
+                } else {
+                    // Enable quality controls for lossy
+                    qualitySlider.disabled = false;
+                    qualityInput.disabled = false;
+                    qualitySlider.style.opacity = '1';
+                    qualityInput.style.opacity = '1';
+                    // Enable preview checkbox for lossy
+                    showPreviewCheckbox.disabled = false;
+                    // Request lossy size calculation with current quality
+                    updateQuality(currentQuality);
+                }
+            });
+        });
 
         // Batch toggle functionality
         const batchToggle = document.getElementById('batch-toggle');
@@ -500,7 +656,8 @@ export function getSetupDialogContent(
             debounceTimer = setTimeout(() => {
                 vscode.postMessage({
                     command: 'previewSize',
-                    quality: currentQuality
+                    quality: currentQuality,
+                    lossless: false
                 });
             }, 300);
         }
@@ -524,8 +681,9 @@ export function getSetupDialogContent(
         continueBtn.addEventListener('click', () => {
             vscode.postMessage({
                 command: 'continue',
-                quality: currentQuality,
-                showPreview: showPreviewCheckbox.checked,
+                quality: currentEncodingType === 'lossless' ? 100 : currentQuality,
+                lossless: currentEncodingType === 'lossless',
+                showPreview: currentEncodingType === 'lossless' ? false : showPreviewCheckbox.checked,
                 deleteOriginal: deleteOriginalCheckbox.checked
             });
         });

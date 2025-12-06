@@ -31,10 +31,14 @@ export async function getFileInfo(filePath: string): Promise<FileInfo> {
     };
 }
 
-export async function convertToWebP(filePath: string, quality: number): Promise<WebPData> {
+export async function convertToWebP(filePath: string, quality: number, lossless: boolean = false): Promise<WebPData> {
     const image = sharp(filePath);
     const webpBuffer = await image
-        .webp({ quality, effort: 4 })
+        .webp({
+            quality: lossless ? 100 : quality,
+            lossless: lossless,
+            effort: 4
+        })
         .toBuffer();
 
     const base64WebP = webpBuffer.toString('base64');
@@ -47,14 +51,18 @@ export async function convertToWebP(filePath: string, quality: number): Promise<
     };
 }
 
-export async function saveWebPFile(originalPath: string, quality: number, deleteOriginal: boolean = false): Promise<void> {
+export async function saveWebPFile(originalPath: string, quality: number, deleteOriginal: boolean = false, lossless: boolean = false): Promise<void> {
     const dir = path.dirname(originalPath);
     const ext = path.extname(originalPath);
     const baseName = path.basename(originalPath, ext);
     const outputPath = path.join(dir, `${baseName}.webp`);
 
     await sharp(originalPath)
-        .webp({ quality, effort: 4 })
+        .webp({
+            quality: lossless ? 100 : quality,
+            lossless: lossless,
+            effort: 4
+        })
         .toFile(outputPath);
 
     if (deleteOriginal) {
