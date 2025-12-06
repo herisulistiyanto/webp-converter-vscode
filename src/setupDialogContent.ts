@@ -426,6 +426,13 @@ export function getSetupDialogContent(
             </label>
         </div>
 
+        <div class="form-group">
+            <label class="checkbox-container">
+                <input type="checkbox" id="delete-original">
+                <span class="checkbox-label">Delete original files after conversion</span>
+            </label>
+        </div>
+
         <div class="buttons">
             <button id="cancel-btn">Cancel</button>
             <button id="continue-btn" class="primary">Continue</button>
@@ -439,6 +446,7 @@ export function getSetupDialogContent(
         const webpSizeSpan = document.getElementById('webp-size');
         const reductionSpan = document.getElementById('reduction');
         const showPreviewCheckbox = document.getElementById('show-preview');
+        const deleteOriginalCheckbox = document.getElementById('delete-original');
         const cancelBtn = document.getElementById('cancel-btn');
         const continueBtn = document.getElementById('continue-btn');
 
@@ -517,7 +525,8 @@ export function getSetupDialogContent(
             vscode.postMessage({
                 command: 'continue',
                 quality: currentQuality,
-                showPreview: showPreviewCheckbox.checked
+                showPreview: showPreviewCheckbox.checked,
+                deleteOriginal: deleteOriginalCheckbox.checked
             });
         });
 

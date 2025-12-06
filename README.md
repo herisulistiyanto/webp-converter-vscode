@@ -70,12 +70,10 @@ The extension works out of the box with sensible defaults:
 
 ## Roadmap
 
-- [ ] Batch conversion support (multiple files)
-- [ ] Actual visual difference comparison
-- [ ] Custom output directory selection
-- [ ] Preset quality profiles (Low, Medium, High)
+- [x] Batch conversion support (multiple files)
+- [x] Actual visual difference comparison
 - [ ] Lossless WebP option
-- [ ] Previous/Next navigation for batch operations
+- [x] Previous/Next navigation for batch operations
 
 ## License
 
